@@ -13,8 +13,8 @@ world = World()
 # map_file = "maps/test_line.txt"
 # map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
-map_file = "maps/test_loop_fork.txt"
-# map_file = "maps/main_maze.txt"
+# map_file = "maps/test_loop_fork.txt"
+map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph=literal_eval(open(map_file, "r").read())
@@ -27,51 +27,28 @@ player = Player(world.starting_room)
 
 # Fill this out with directions to walk
 # traversal_path = ['n', 'n']
-traversal_path = []
+traversal_path = [] # paths traversed
 
-# START HERE
-Map = MapGraph()
-for room in world.rooms:
-    Map.add_room(world.rooms[room])
-    if world.rooms[room].n_to is not None:
-        next_room = world.rooms[room].get_room_in_direction('n')
-        if Map.add_connection(world.rooms[room], next_room):
-            Map.add_connection(world.rooms[room], next_room)
-        # print('room')
-        # print(world.rooms[room])
-        # print('connection')
-        # print(world.rooms[room].n_to)
-        # print(next_room)
-    elif world.rooms[room].s_to is not None:
-        next_room = world.rooms[room].get_room_in_direction('s')
-        if Map.add_connection(world.rooms[room], next_room):
-            Map.add_connection(world.rooms[room], next_room)
+reverse_path = [] # paths traversed in reverse
+opposite_direction = {'n':'s', 's':'n', 'e':'w', 'w':'e'}
 
-        # print('room')
-        # print(world.rooms[room])
-        # print('connection')
-        # print(world.rooms[room].s_to)
-        # print(next_room)
-    elif world.rooms[room].e_to is not None:
-        next_room = world.rooms[room].get_room_in_direction('e')
-        if Map.add_connection(world.rooms[room], next_room):
-            Map.add_connection(world.rooms[room], next_room)
+room_paths = {}
 
-        # print('room')
-        # print(world.rooms[room])
-        # print('connection')
-        # print(world.rooms[room].e_to)
-        # print(next_room)
-    elif world.rooms[room].w_to is not None:
-        next_room = world.rooms[room].get_room_in_direction('w')
-        if Map.add_connection(world.rooms[room], next_room):
-            Map.add_connection(world.rooms[room], next_room)
+room_paths[player.current_room.id] = player.current_room.get_exits()
 
-        # print('room')
-        # print(world.rooms[room])
-        # print('connection')
-        # print(world.rooms[room].w_to)
-        # print(next_room)
+while len(room_paths) < len(room_graph)-1:
+    if player.current_room.id not in room_paths:
+        room_paths[player.current_room.id] = player.current_room.get_exits()
+        last_room_visited = reverse_path[-1]
+        room_paths[player.current_room.id].remove(last_room_visited)
+    while len(room_paths[player.current_room.id]) == 0:
+        reverse = reverse_path.pop()
+        traversal_path.append(reverse)
+        player.travel(reverse)
+    movement_direction = room_paths[player.current_room.id].pop(0)
+    traversal_path.append(movement_direction)
+    reverse_path.append(opposite_direction[movement_direction])
+    player.travel(movement_direction)
 
 
 
@@ -95,14 +72,7 @@ else:
     print(f"{len(room_graph) - len(visited_rooms)} unvisited rooms")
 
 
-# print(world)
-# for k in world.rooms:
-#     print(f'{world.rooms[k]}')
-print(Map.connections)
-print('-------------------Visited Rooms----------------------')
-print(visited_rooms)
-print('---------------MAP------------------')
-# print(Map)
+
 
 # ######
 # UNCOMMENT TO WALK AROUND
